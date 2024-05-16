@@ -7,7 +7,11 @@
 
 [![codecov](https://codecov.io/gh/AnushaPB/wingen/graph/badge.svg?token=P4Z35HFR4Y)](https://app.codecov.io/gh/AnushaPB/wingen)
 [![R-CMD-check](https://github.com/AnushaPB/wingen/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/AnushaPB/wingen/actions/workflows/R-CMD-check.yaml)
-<https://img.shields.io/badge/license-MIT-blue> [![Zenodo
+[![CRAN
+status](https://www.r-pkg.org/badges/version/wingen)](https://CRAN.R-project.org/package=wingen)
+[![license:
+MIT](https://img.shields.io/badge/license-MIT-blue)](https://img.shields.io/badge/license-MIT-blue)
+[![Zenodo
 DOI](https://zenodo.org/badge/499617621.svg)](https://zenodo.org/badge/latestdoi/499617621)
 <!-- badges: end -->
 
@@ -32,11 +36,17 @@ about wingen for a quick overview of the package and its uses.
 
 ## Installation
 
-Install wingen from [GitHub](https://github.com/) with:
+Install the released version of wingen from CRAN:
+
+``` r
+install.packages("wingen")
+```
+
+Or install the development version from GitHub:
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("AnushaPB/wingen", build_vignettes = TRUE)
+devtools::install_github("AnushaPB/wingen")
 ```
 
 ## Example
