@@ -102,15 +102,16 @@ ggplot_count(wgd) +
 ![](README_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
 
 Next, the output from `window_gd()` can be interpolated using kriging
-with the `krig_gd()` function.
+with the `wkrig_gd()` function.
 
 ``` r
-# Krige genetic diversity (disaggregate grid to project across a smoother final surface)
-kgd <- krig_gd(wgd, lotr_lyr, index = 1, disagg_grd = 2)
+# Interpolate to a higher resolution
+krige_layer <- disagg(wgd, 2) 
+kgd <- wkrig_gd(wgd, krige_layer)
 ```
 
-Finally, the output from `krig_gd()` (or `window_gd()`) can be masked to
-exclude areas that fall outside of the study area or that were
+Finally, the output from `wkrig_gd()` (or `window_gd()`) can be
+masked to exclude areas that fall outside of the study area or that were
 undersampled.
 
 ``` r

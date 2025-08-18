@@ -2,9 +2,9 @@
 #'
 #' Loads middle earth example data
 #'
-#' @param quiet whether to hide message (defaults to FALSE)
+#' @param quiet Whether to hide message (defaults to FALSE).
 #'
-#' @return three objects are loaded (lotr_vcf, lotr_coords, and lotr_lyrs)
+#' @return Three objects are loaded (lotr_vcf, lotr_coords, and lotr_lyrs).
 #' @export
 #'
 #' @examples
@@ -22,7 +22,7 @@ load_middle_earth_ex <- function(quiet = FALSE) {
       crayon::yellow(paste0("vcfR object (100 variants x 100 samples)")),
       crayon::green(crayon::bold("\nlotr_coords: ")), crayon::green("dataframe with x and y coordinates"),
       crayon::magenta(crayon::bold("\nlotr_lyr: ")), crayon::magenta("middle earth RasterLayer (100 x 100)"),
-      crayon::blue(crayon::bold("\nlotr_range: ")), crayon::blue("SpatialPolygonsDataFrame of spp range"),
+      crayon::blue(crayon::bold("\nlotr_range: ")), crayon::blue("sf polygon of the species range"),
       crayon::cyan(crayon::bold("\n\n--------------------------------------------------\n"))
     ))
   }
@@ -32,9 +32,9 @@ load_middle_earth_ex <- function(quiet = FALSE) {
 #'
 #' Loads mini middle earth example data
 #'
-#' @param quiet whether to hide message (defaults to FALSE)
+#' @param quiet Whether to hide message (defaults to FALSE).
 #'
-#' @return three objects are assigned in the GlobalEnv (vcf, coords, and lyr)
+#' @return Three objects are assigned in the GlobalEnv (vcf, coords, and lyr).
 #' @export
 #'
 #' @examples

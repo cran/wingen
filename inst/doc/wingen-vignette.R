@@ -78,7 +78,7 @@ wgd <- window_gd(lotr_vcf,
 # The ggplot_gd function plots the genetic diversity layer
 ggplot_gd(wgd, bkg = lotr_range) +
   ggtitle("Moving window pi") +
-  # add coordinates
+  # Add sampling coordinates
   geom_point(data = lotr_coords, aes(x = x, y = y), pch = 16)
 
 ## ----fig.height = 5, fig.width = 5.5------------------------------------------
@@ -189,17 +189,21 @@ resist_gd <- resist_gd(
 ggplot_gd(resist_gd)
 
 ## ----krige results, fig.width = 5, fig.height = 5, cache = TRUE, warning = FALSE----
-# Note: this step can take a little while
-# index = 1 kriges the first layer in wgd (the genetic diversity layer)
-kgd <- krig_gd(wgd, index = 1, grd = lotr_lyr, disagg_grd = 2)
+# First, let's make a layer to krige across
+# Let's say I want to krige to twice the resolution of the moving window layer
+# I can use the disagg() function to disaggregate the moving window layer
+grd <- disagg(wgd, 2)
+
+# Then, I can use this layer as the grid to krige across
+kgd <- wkrig_gd(wgd[["pi"]], grd = grd, weight_r = wgd[["sample_count"]], nmax = 30)
 
 ggplot_gd(kgd) +
   ggtitle("Kriged pi")
 
 ## ----mask results 1, fig.width = 5.5, fig.height = 5, warning = FALSE---------
-# Disaggregate lotr_lyr to make it the same resolution as kgd before masking
-## Note: lotr_lyr is a RasterLayer which we convert to a SpatRaster with rast()
-mask_lyr <- disagg(rast(lotr_lyr), 2)
+# Aggregate the lotr_lyr to make it the same resolution as kgd before masking
+# Note: lotr_lyr is a RasterLayer, so we convert it to a SpatRaster
+mask_lyr <- resample(rast(lotr_lyr), kgd)
 mgd <- mask_gd(kgd, mask_lyr, minval = 0.1)
 
 ggplot_gd(mgd) +
@@ -212,64 +216,64 @@ ggplot_gd(mgd) +
   ggtitle("Kriged & range masked pi")
 
 ## ----eval = FALSE-------------------------------------------------------------
-#  # First, install and load the SpatialKDE package
-#  if (!require("SpatialKDE", quietly = TRUE)) install.packages("SpatialKDE")
-#  library(SpatialKDE)
+# # First, install and load the SpatialKDE package
+# if (!require("SpatialKDE", quietly = TRUE)) install.packages("SpatialKDE")
+# library(SpatialKDE)
 
 ## ----mask results 3, fig.width = 5.5, fig.height = 5, eval = FALSE------------
-#  # Note: this code is not evaluated when building the vignette as it requires the SpatialKDE package
-#  
-#  # Spatial KDE requires an sf data.frame containing only POINTS that is in a projected coordinate system
-#  # The simulated coordinates are not projected, but for the purpose of this example, we'll pretend they are projected under the Goode Homolosine projection
-#  # This kind of arbitrary setting of crs should not be done for real data (see above example for how to properly project coordinates)
-#  lotr_sf <- st_as_sf(lotr_coords, coords = c("x", "y")) %>% st_set_crs("+proj=goode")
-#  
-#  # The grid layer must also be a RasterLayer for SpatialKDE
-#  # Here, we use the kriged raster as our grid to get a KDE layer of the same spatial extent and resolution
-#  grid <- raster(kgd)
-#  
-#  # See the SpatialKDE package for more options and details about using KDE
-#  kde_lyr <- kde(
-#    lotr_sf,
-#    kernel = "quartic",
-#    band_width = 15,
-#    decay = 1,
-#    grid = grid,
-#  )
-#  
-#  # Visualize KDE layer
-#  ggplot_count(kde_lyr) +
-#    ggtitle("KDE")
-#  
-#  # Mask with mask_gd
-#  mgd <- mask_gd(kgd, kde_lyr, minval = 1)
-#  
-#  ggplot_gd(mgd) +
-#    ggtitle("Kriged & sample density masked pi")
+# # Note: this code is not evaluated when building the vignette as it requires the SpatialKDE package
+# 
+# # Spatial KDE requires an sf data.frame containing only POINTS that is in a projected coordinate system
+# # The simulated coordinates are not projected, but for the purposes of this example, we'll pretend they are projected under the Goode Homolosine projection
+# # This kind of arbitrary setting of crs should not be done for real data (see above example for how to properly project coordinates)
+# lotr_sf <- st_as_sf(lotr_coords, coords = c("x", "y")) %>% st_set_crs("+proj=goode")
+# 
+# # The grid layer must also be a RasterLayer for SpatialKDE
+# # Here, we use the kriged raster as our grid to get a KDE layer of the same spatial extent and resolution
+# grid <- raster(kgd)
+# 
+# # See the SpatialKDE package for more options and details about using KDE
+# kde_lyr <- kde(
+#   lotr_sf,
+#   kernel = "quartic",
+#   band_width = 15,
+#   decay = 1,
+#   grid = grid,
+# )
+# 
+# # Visualize KDE layer
+# ggplot_count(kde_lyr) +
+#   ggtitle("KDE")
+# 
+# # Mask with mask_gd
+# mgd <- mask_gd(kgd, kde_lyr, minval = 1)
+# 
+# ggplot_gd(mgd) +
+#   ggtitle("Kriged & sample density masked pi")
 
 ## ----range map background, fig.width = 5, fig.height = 5, warning = FALSE-----
 ggplot_gd(mgd, bkg = lotr_range) +
   ggtitle("Kriged & masked pi")
 
 ## ----parallelization, fig.width = 5, fig.height = 5, eval = FALSE, message = FALSE----
-#  # Note: this code is not evaluated when building the vignette as it spawns multiple processes
-#  
-#  # setup parallel session
-#  future::plan("multisession", workers = 2)
-#  
-#  wgd <- window_gd(lotr_vcf,
-#    lotr_coords,
-#    lotr_lyr,
-#    stat = "pi",
-#    wdim = 7,
-#    fact = 3,
-#    rarify_n = 2,
-#    rarify_nit = 5,
-#    rarify = TRUE
-#  )
-#  
-#  # end parallel session
-#  future::plan("sequential")
+# # Note: this code is not evaluated when building the vignette as it spawns multiple processes
+# 
+# # setup parallel session
+# future::plan("multisession", workers = 2)
+# 
+# wgd <- window_gd(lotr_vcf,
+#   lotr_coords,
+#   lotr_lyr,
+#   stat = "pi",
+#   wdim = 7,
+#   fact = 3,
+#   rarify_n = 2,
+#   rarify_nit = 5,
+#   rarify = TRUE
+# )
+# 
+# # end parallel session
+# future::plan("sequential")
 
 ## ----cache = TRUE, warning = FALSE, warning = FALSE, message = FALSE----------
 multistat_wgd <- window_gd(lotr_vcf,
@@ -286,30 +290,30 @@ multistat_wgd <- window_gd(lotr_vcf,
 ggplot_gd(multistat_wgd, bkg = lotr_range)
 
 ## ----warning = FALSE, message = FALSE, eval = FALSE---------------------------
-#  hwe_wgd <- window_gd(lotr_vcf[1:10, ],
-#    lotr_coords,
-#    lotr_lyr,
-#    stat = "hwe",
-#    wdim = 3,
-#    fact = 5,
-#    rarify = FALSE,
-#    L = 100,
-#    sig = 0.10
-#  )
-#  
-#  bs_wgd <- window_gd(lotr_vcf[1:10, ],
-#    lotr_coords,
-#    lotr_lyr,
-#    stat = "basic_stats",
-#    wdim = 3,
-#    fact = 5,
-#    rarify = FALSE,
-#    L = 100
-#  )
-#  
-#  ggplot_gd(hwe_wgd, bkg = lotr_range)
-#  
-#  ggplot_gd(bs_wgd, bkg = lotr_range)
+# hwe_wgd <- window_gd(lotr_vcf[1:10, ],
+#   lotr_coords,
+#   lotr_lyr,
+#   stat = "hwe",
+#   wdim = 3,
+#   fact = 5,
+#   rarify = FALSE,
+#   L = 100,
+#   sig = 0.10
+# )
+# 
+# bs_wgd <- window_gd(lotr_vcf[1:10, ],
+#   lotr_coords,
+#   lotr_lyr,
+#   stat = "basic_stats",
+#   wdim = 3,
+#   fact = 5,
+#   rarify = FALSE,
+#   L = 100
+# )
+# 
+# ggplot_gd(hwe_wgd, bkg = lotr_range)
+# 
+# ggplot_gd(bs_wgd, bkg = lotr_range)
 
 ## ----fig.width = 5, fig.height = 5, cache = TRUE, warning = FALSE, message = FALSE----
 # First, we extract the raster values at those coordinates
@@ -333,19 +337,22 @@ ggplot_gd(we) +
   ggtitle("Mean raster value")
 
 ## ----fig.width = 5.5, fig.height = 5, cache = TRUE, warning = FALSE, message = FALSE, eval = FALSE----
-#  # We use the vcfR package to convert vcf to genind for our example
-#  library(vcfR)
-#  
-#  # Convert existing vcf example file into genind object:
-#  genind <- vcfR2genind(lotr_vcf)
-#  
-#  # Run window_general with no rarefaction
-#  we_gi <- window_general(genind,
-#    coords = lotr_coords,
-#    lyr = lotr_lyr,
-#    stat = "allelic_richness",
-#    wdim = 7,
-#    fact = 3,
-#    na.rm = TRUE
-#  )
+# # We use the vcfR package to convert vcf to genind for our example
+# library(vcfR)
+# 
+# # Convert existing vcf example file into genind object:
+# genind <- vcfR2genind(lotr_vcf)
+# 
+# # Run window_general with no rarefaction
+# we_gi <- window_general(genind,
+#   coords = lotr_coords,
+#   lyr = lotr_lyr,
+#   stat = "allelic_richness",
+#   wdim = 7,
+#   fact = 3,
+#   na.rm = TRUE
+# )
+# 
+# ggplot_gd(we_gi) +
+#   ggtitle("Allelic richness from genind")
 
